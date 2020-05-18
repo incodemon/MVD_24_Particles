@@ -30,13 +30,40 @@ void main()
 {
     
     //move particle
-    v_velocity = a_velocity;
-    v_vertex = a_vertex + vec3(0,0.001,0);
-    v_age = a_age;
-    v_life = a_life;
-    
+
+    float age = u_time - a_age;
+
+    if(age > a_life){ //guaranteed for first time
+    float r = random( vec2(gl_VertexID, u_time * 1000.0) );
+
+    //nice spinning fountain
+    //increment angle gradually trhough a whole circle (2PI)
+    float angle = mod(u_time * 1, 6.283); 
+
+    vec3 ideal_dir = vec3(2.0 * cos(angle),
+                          3.1415,
+                          2.0*sin(angle)
+                          );
+
+    vec3 randomized_dir = ideal_dir * (r * 0.5 + 1.5);
+
+
+        //reset particle
+        v_vertex = vec3(0);
+        v_velocity = randomized_dir;
+        v_age = u_time; //set starting age to current time
+        v_life = a_life;
+    }else{
+        //move particle
+        v_velocity = a_velocity - vec3(0.0,0.005,0.0);
+        v_vertex = a_vertex + v_velocity * 0.005;
+        v_age = a_age;
+        v_life = a_life;
+    }
     gl_Position = u_vp * u_model * vec4(a_vertex, 1.0);
     
-    gl_PointSize = 5.0;
+   // gl_PointSize = 5.0;
+
+   gl_PointSize = (0.2 * u_height_near_plane) / gl_Position.w;
     
 }

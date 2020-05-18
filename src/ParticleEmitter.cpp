@@ -42,9 +42,11 @@ void ParticleEmitter::init() {
         4,
         feedback_varyings
         );
-
+    texture_id_ = Parsers::parseTexture("data/assets/droptexture.tga");
     //tell opengl to set particle size in shader
     glEnable(GL_PROGRAM_POINT_SIZE);
+
+    glEnable(GL_POINT_SPRITE);
 
     int num_points = 1000;
 
@@ -121,7 +123,6 @@ void ParticleEmitter::init() {
 
 
     //buffer B
-
     //now fill array B, same as A
     glBindVertexArray(vaoB_);
     GLuint vb_B_pos, vb_B_vel, vb_B_age, vb_B_lif;
@@ -178,6 +179,18 @@ void ParticleEmitter::update() {
     particle_shader_->setUniform(U_VP, cam.view_projection);
     particle_shader_->setUniform(U_TIME, (float)glfwGetTime());
     //set texture later
+    particle_shader_->setTexture(U_DIFFUSE_MAP, texture_id_, 10);
+
+    //calculate height of near plane and send to shader
+    float fov_deg = cam.fov * 57.2958f;
+
+    //get screen size from opengl
+    int viewport[4];
+    glGetIntegerv(GL_VIEWPORT, viewport);
+    float height_near_plane = (float)abs(viewport[3] - viewport[1]) / (2 * tan(0.5f * fov_deg * 3.14159f / 180));
+
+    //send near height plane to shader
+    particle_shader_->setUniform(U_HEIGHT_NEAR_PLANE, height_near_plane);
 
     if (vaoSource == 0) {
         //render vaoA
